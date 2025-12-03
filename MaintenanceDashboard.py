@@ -40,6 +40,8 @@ class DashboardApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("保养合同跟踪情况")
+        # 默认窗口改为中等尺寸，避免初次启动窗口过大需要手动调整
+        self.root.geometry("1200x760")
         self.style = Style(theme="superhero")
         self.file_path: str | None = None
         self.year_var = tk.StringVar()
@@ -218,7 +220,7 @@ class DashboardApp:
             "合同原件",
             "台数",
         )
-        tree = Treeview(frame, columns=columns, show="headings", height=12)
+        tree = Treeview(frame, columns=columns, show="headings", height=10)
         for col_name in columns:
             tree.heading(col_name, text=col_name)
             width = 130 if col_name != "合同客户名称" else 150
@@ -545,68 +547,7 @@ class DashboardApp:
         story.append(P(meta_text, style=small_style))
         story.append(Spacer(1, 6))
 
-        # 展示级封面横幅（柔和背景，突出站点与月份）
-        banner = Table(
-            [
-                [
-                    Paragraph(
-                        f"<para alignment='left'><b>{title_text}</b></para>",
-                        ParagraphStyle(
-                            "banner_title",
-                            parent=normal_style,
-                            fontSize=13,
-                            textColor=colors.HexColor("#0d6efd"),
-                        ),
-                    ),
-                    Paragraph(
-                        "精选配色 · 高清打印 · 展会级呈现",
-                        ParagraphStyle(
-                            "banner_subtitle",
-                            parent=normal_style,
-                            fontSize=11,
-                            textColor=colors.HexColor("#0f172a"),
-                        ),
-                    ),
-                ]
-            ],
-            colWidths=[0.55 * available_width(page_size), 0.45 * available_width(page_size)],
-            hAlign="LEFT",
-        )
-        banner.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eef2ff")),
-                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#c7d2fe")),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                    ("TOPPADDING", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ]
-            )
-        )
-        story.append(banner)
-        story.append(Spacer(1, 10))
-
-        # 元信息条（无指标表格，仅突出文件与导出时间）
-        info_strip = Table(
-            [[Paragraph(meta_text, small_style)]],
-            colWidths=[available_width(page_size)],
-            hAlign="LEFT",
-        )
-        info_strip.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
-                    ("BOX", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ]
-            )
-        )
-        story.append(info_strip)
+        # 直接进入表格区域，不再插入额外的封面与元信息表格
         story.append(Spacer(1, 12))
 
         def export_tree(tree):
