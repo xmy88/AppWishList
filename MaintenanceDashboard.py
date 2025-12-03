@@ -40,8 +40,8 @@ class DashboardApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("保养合同跟踪情况")
-        # 默认窗口改为中等尺寸，避免初次启动窗口过大需要手动调整
-        self.root.geometry("1200x760")
+        # 默认窗口改为更紧凑的尺寸，减少初次启动手动缩放需求
+        self.root.geometry("1100x700")
         self.style = Style(theme="superhero")
         self.file_path: str | None = None
         self.year_var = tk.StringVar()
@@ -220,7 +220,7 @@ class DashboardApp:
             "合同原件",
             "台数",
         )
-        tree = Treeview(frame, columns=columns, show="headings", height=10)
+        tree = Treeview(frame, columns=columns, show="headings", height=9)
         for col_name in columns:
             tree.heading(col_name, text=col_name)
             width = 130 if col_name != "合同客户名称" else 150
@@ -457,14 +457,6 @@ class DashboardApp:
             fontSize=11,
             leading=14,
         )
-        small_style = ParagraphStyle(
-            "small",
-            parent=styles["Normal"],
-            fontName="SimSun",
-            fontSize=10,
-            leading=12,
-        )
-
         def P(x, style=normal_style):
             s = "" if x is None else str(x)
             return Paragraph(escape(s), style)
@@ -539,16 +531,8 @@ class DashboardApp:
         story.append(Paragraph(f"<font size=15>{title_text}</font>", title_style))
         story.append(Spacer(1, 12))
 
-        # 汇总信息
-        meta_text = (
-            f"数据文件：{os.path.basename(self.file_path)}  |  记录：{self.loaded_rows}  |  "
-            f"导出时间：{datetime.datetime.now():%Y-%m-%d %H:%M}"
-        )
-        story.append(P(meta_text, style=small_style))
-        story.append(Spacer(1, 6))
-
-        # 直接进入表格区域，不再插入额外的封面与元信息表格
-        story.append(Spacer(1, 12))
+        # 直接进入表格区域，不再插入额外的封面、元信息或指标条
+        story.append(Spacer(1, 10))
 
         def export_tree(tree):
             data = [tuple(Paragraph(escape(h), normal_style) for h in headers)]
