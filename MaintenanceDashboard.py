@@ -545,52 +545,68 @@ class DashboardApp:
         story.append(P(meta_text, style=small_style))
         story.append(Spacer(1, 6))
 
-        summary_rows = [
-            ["指标", "数量"],
-            ["超期未做", self.overall_stats.get("overdue_not_done", 0)],
-            ["超期已做未回", self.overall_stats.get("overdue_done_not_returned", 0)],
-            ["未做", self.overall_stats.get("total_not_done", 0)],
-            ["已做未回", self.overall_stats.get("done_not_returned", 0)],
-            ["已做已回", self.overall_stats.get("done_returned", 0)],
-        ]
-        summary_table = Table(summary_rows, colWidths=[110, 70], hAlign="LEFT")
-        summary_table.setStyle(
+        # 展示级封面横幅（柔和背景，突出站点与月份）
+        banner = Table(
+            [
+                [
+                    Paragraph(
+                        f"<para alignment='left'><b>{title_text}</b></para>",
+                        ParagraphStyle(
+                            "banner_title",
+                            parent=normal_style,
+                            fontSize=13,
+                            textColor=colors.HexColor("#0d6efd"),
+                        ),
+                    ),
+                    Paragraph(
+                        "精选配色 · 高清打印 · 展会级呈现",
+                        ParagraphStyle(
+                            "banner_subtitle",
+                            parent=normal_style,
+                            fontSize=11,
+                            textColor=colors.HexColor("#0f172a"),
+                        ),
+                    ),
+                ]
+            ],
+            colWidths=[0.55 * available_width(page_size), 0.45 * available_width(page_size)],
+            hAlign="LEFT",
+        )
+        banner.setStyle(
             TableStyle(
                 [
-                    ("FONT", (0, 0), (-1, -1), "SimSun"),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-                    ("ALIGN", (1, 1), (1, -1), "RIGHT"),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eef2ff")),
+                    ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#c7d2fe")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ]
             )
         )
-        story.append(summary_table)
-        story.append(Spacer(1, 8))
+        story.append(banner)
+        story.append(Spacer(1, 10))
 
-        block_summary_rows = [["颜色块", "未做", "已做", "已做未回", "已做已回"]]
-        for color, label in (("red", "超期"), ("yellow", "当月"), ("green", "未来")):
-            stats = self.block_stats.get(color, {})
-            block_summary_rows.append(
-                [
-                    label,
-                    stats.get("未做", 0),
-                    stats.get("已做", 0),
-                    stats.get("已做未回", 0),
-                    stats.get("已做已回", 0),
-                ]
-            )
-        block_summary = Table(block_summary_rows, colWidths=[80, 60, 60, 80, 80], hAlign="LEFT")
-        block_summary.setStyle(
+        # 元信息条（无指标表格，仅突出文件与导出时间）
+        info_strip = Table(
+            [[Paragraph(meta_text, small_style)]],
+            colWidths=[available_width(page_size)],
+            hAlign="LEFT",
+        )
+        info_strip.setStyle(
             TableStyle(
                 [
-                    ("FONT", (0, 0), (-1, -1), "SimSun"),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-                    ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                    ("BOX", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
                 ]
             )
         )
-        story.append(block_summary)
+        story.append(info_strip)
         story.append(Spacer(1, 12))
 
         def export_tree(tree):
@@ -623,6 +639,7 @@ class DashboardApp:
                     ("FONT", (0, 1), (-1, -1), "SimSun"),
                     ("LEFTPADDING", (0, 0), (-1, -1), 4),
                     ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#ffffff"), colors.HexColor("#f8fafc")]),
                 ]
             )
             ts.add("ALIGN", (-1, 1), (-1, -1), "RIGHT")
