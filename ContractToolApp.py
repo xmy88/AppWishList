@@ -557,8 +557,9 @@ class WordExcelProcessorApp:
         self.pay_method_var = tb.StringVar(value="季度付")
         self.annual_price_var = tb.StringVar(value="12000")
         self.subtotal_var = tb.StringVar(value="3000")
-        self.contact1_var = tb.StringVar()
-        self.contact2_var = tb.StringVar()
+        self.station_choice_var = tb.StringVar(value="江宁站")
+        self.contact1_var = tb.StringVar(value="张勇辉")
+        self.contact2_var = tb.StringVar(value="徐铭崎")
         self.annual_inspection_var = tb.StringVar(value="不包含")
 
         self.loaded_excels = []
@@ -587,11 +588,20 @@ class WordExcelProcessorApp:
             width=42
         ).grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
-        tb.Label(self.frame, text="联系人1/2:").grid(row=4, column=0, sticky='e', padx=5, pady=5)
+        tb.Label(self.frame, text="维修站(联系人1)/联系人2:").grid(row=4, column=0, sticky='e', padx=5, pady=5)
         contact_frame = tb.Frame(self.frame)
         contact_frame.grid(row=4, column=1, sticky='w', padx=5, pady=5)
-        tb.Entry(contact_frame, textvariable=self.contact1_var, width=20).grid(row=0, column=0, padx=5)
-        tb.Entry(contact_frame, textvariable=self.contact2_var, width=20).grid(row=0, column=1, padx=5)
+        station_box = tb.Combobox(
+            contact_frame,
+            textvariable=self.station_choice_var,
+            values=["江宁站", "禄口站"],
+            state="readonly",
+            width=18
+        )
+        station_box.grid(row=0, column=0, padx=5)
+        station_box.bind('<<ComboboxSelected>>', lambda e: self.update_contacts_by_station())
+        tb.Entry(contact_frame, textvariable=self.contact1_var, width=15, state="readonly").grid(row=0, column=1, padx=5)
+        tb.Entry(contact_frame, textvariable=self.contact2_var, width=15, state="readonly").grid(row=0, column=2, padx=5)
 
         tb.Label(self.frame, text="开始日期/结束日期:").grid(row=5, column=0, sticky='e', padx=5, pady=5)
         date_frame = tb.Frame(self.frame)
@@ -651,6 +661,7 @@ class WordExcelProcessorApp:
 
         self.frame.grid_columnconfigure(1, weight=1)
         self.frame.grid_rowconfigure(12, weight=1)
+        self.update_contacts_by_station()
 
     def select_template_folder(self):
         folder = filedialog.askdirectory(title="选择模板文件夹(docx)")
@@ -706,6 +717,14 @@ class WordExcelProcessorApp:
                 item["filename"], item["project"], item["address"], item["client"], item["rows"]
             ))
 
+    def update_contacts_by_station(self):
+        station = self.station_choice_var.get()
+        if station == "禄口站":
+            self.contact1_var.set("李小康")
+        else:
+            self.contact1_var.set("张勇辉")
+        self.contact2_var.set("徐铭崎")
+
     def start_batch_generate_contracts(self):
         if not self.loaded_excels:
             self.text.set("请先加载Excel文件夹")
@@ -738,6 +757,7 @@ class WordExcelProcessorApp:
 
     def generate_contract_for_single(self, excel_info):
         excel_path = excel_info["path"]
+        self.update_contacts_by_station()
         start_dt = self.parse_chinese_date(self.start_date_var.get().strip())
         end_dt = self.parse_chinese_date(self.end_date_var.get().strip())
         pay_method = self.pay_method_var.get().strip()
@@ -821,6 +841,8 @@ class WordExcelProcessorApp:
             raise ValueError("Word模板不足4个表，无法写付款计划")
 
         out_name = f"{user_ming}自保养合同.docx"
+        if start_dt.year == 2025:
+            out_name = f"{user_ming}2025自保养合同.docx"
         out_path = os.path.join(self.output_path.get(), out_name)
         doc.save(out_path)
 
