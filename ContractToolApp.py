@@ -552,17 +552,21 @@ class WordExcelProcessorApp:
             "新版自保养合同模版C",
         ]
 
-        self.start_date_var = tb.StringVar()
-        self.end_date_var = tb.StringVar()
-        self.pay_method_var = tb.StringVar(value="季度付")
-        self.annual_price_var = tb.StringVar(value="12000")
-        self.subtotal_var = tb.StringVar(value="3000")
         self.station_choice_var = tb.StringVar(value="江宁站")
         self.contact1_var = tb.StringVar(value="张勇辉")
         self.contact2_var = tb.StringVar(value="徐铭崎")
-        self.annual_inspection_var = tb.StringVar(value="不包含")
+
+        # 单文件编辑区的控件绑定变量（每次选中行后填充/保存）
+        self.edit_start_date = tb.StringVar()
+        self.edit_end_date = tb.StringVar()
+        self.edit_pay_method = tb.StringVar(value="季度付")
+        self.edit_annual_price = tb.StringVar()
+        self.edit_subtotal = tb.StringVar()
+        self.edit_annual_inspection = tb.StringVar(value="不包含")
 
         self.loaded_excels = []
+        self.file_configs = {}  # path -> per-file config
+        self.preview_item_map = {}  # tree item -> path
 
         self.create_widgets()
 
@@ -588,51 +592,49 @@ class WordExcelProcessorApp:
             width=42
         ).grid(row=3, column=1, padx=5, pady=5, sticky='w')
 
-        tb.Label(self.frame, text="维修站(联系人1)/联系人2:").grid(row=4, column=0, sticky='e', padx=5, pady=5)
-        contact_frame = tb.Frame(self.frame)
-        contact_frame.grid(row=4, column=1, sticky='w', padx=5, pady=5)
-        station_box = tb.Combobox(
-            contact_frame,
+        tb.Label(self.frame, text="维修站(联系人自动填，不在界面显示):").grid(row=4, column=0, sticky='e', padx=5, pady=5)
+        tb.Combobox(
+            self.frame,
             textvariable=self.station_choice_var,
             values=["江宁站", "禄口站"],
             state="readonly",
             width=18
-        )
-        station_box.grid(row=0, column=0, padx=5)
-        station_box.bind('<<ComboboxSelected>>', lambda e: self.update_contacts_by_station())
-        tb.Entry(contact_frame, textvariable=self.contact1_var, width=15, state="readonly").grid(row=0, column=1, padx=5)
-        tb.Entry(contact_frame, textvariable=self.contact2_var, width=15, state="readonly").grid(row=0, column=2, padx=5)
+        ).grid(row=4, column=1, sticky='w', padx=5, pady=5)
+        self.station_choice_var.trace_add('write', lambda *_: self.update_contacts_by_station())
 
-        tb.Label(self.frame, text="开始日期/结束日期:").grid(row=5, column=0, sticky='e', padx=5, pady=5)
-        date_frame = tb.Frame(self.frame)
-        date_frame.grid(row=5, column=1, sticky='w', padx=5, pady=5)
-        tb.Entry(date_frame, textvariable=self.start_date_var, width=18).grid(row=0, column=0, padx=5)
-        tb.Entry(date_frame, textvariable=self.end_date_var, width=18).grid(row=0, column=1, padx=5)
-        tb.Label(date_frame, text="示例：2025年3月30日").grid(row=0, column=2, padx=5)
-
-        tb.Label(self.frame, text="付款方式:").grid(row=6, column=0, sticky='e', padx=5, pady=5)
+        # 单文件金额/日期编辑区
+        edit_row = 5
+        tb.Label(self.frame, text="选择文件后填写金额/日期:").grid(row=edit_row, column=0, sticky='ne', padx=5, pady=5)
+        edit_frame = tb.Frame(self.frame)
+        edit_frame.grid(row=edit_row, column=1, columnspan=2, sticky='w', padx=5, pady=5)
+        tb.Label(edit_frame, text="开始日期:").grid(row=0, column=0, padx=3, pady=2, sticky='e')
+        tb.Entry(edit_frame, textvariable=self.edit_start_date, width=18).grid(row=0, column=1, padx=3, pady=2)
+        tb.Label(edit_frame, text="结束日期:").grid(row=0, column=2, padx=3, pady=2, sticky='e')
+        tb.Entry(edit_frame, textvariable=self.edit_end_date, width=18).grid(row=0, column=3, padx=3, pady=2)
+        tb.Label(edit_frame, text="付款方式:").grid(row=0, column=4, padx=3, pady=2, sticky='e')
         tb.Combobox(
-            self.frame,
-            textvariable=self.pay_method_var,
+            edit_frame,
+            textvariable=self.edit_pay_method,
             values=["季度付", "半年付", "年付"],
             state="readonly",
-            width=12
-        ).grid(row=6, column=1, padx=5, pady=5, sticky='w')
-
-        tb.Label(self.frame, text="年价/小计:").grid(row=7, column=0, sticky='e', padx=5, pady=5)
-        price_frame = tb.Frame(self.frame)
-        price_frame.grid(row=7, column=1, sticky='w', padx=5, pady=5)
-        tb.Entry(price_frame, textvariable=self.annual_price_var, width=15).grid(row=0, column=0, padx=5)
-        tb.Entry(price_frame, textvariable=self.subtotal_var, width=15).grid(row=0, column=1, padx=5)
-
-        tb.Label(self.frame, text="年检费:").grid(row=8, column=0, sticky='e', padx=5, pady=5)
+            width=10
+        ).grid(row=0, column=5, padx=3, pady=2)
+        tb.Label(edit_frame, text="年价:").grid(row=1, column=0, padx=3, pady=2, sticky='e')
+        tb.Entry(edit_frame, textvariable=self.edit_annual_price, width=12).grid(row=1, column=1, padx=3, pady=2)
+        tb.Label(edit_frame, text="小计:").grid(row=1, column=2, padx=3, pady=2, sticky='e')
+        tb.Entry(edit_frame, textvariable=self.edit_subtotal, width=12).grid(row=1, column=3, padx=3, pady=2)
+        tb.Label(edit_frame, text="年检费:").grid(row=1, column=4, padx=3, pady=2, sticky='e')
         tb.Combobox(
-            self.frame,
-            textvariable=self.annual_inspection_var,
+            edit_frame,
+            textvariable=self.edit_annual_inspection,
             values=["包含", "不包含"],
             state="readonly",
             width=10
-        ).grid(row=8, column=1, padx=5, pady=5, sticky='w')
+        ).grid(row=1, column=5, padx=3, pady=2)
+        tb.Label(edit_frame, text="示例日期: 2025年3月30日").grid(row=2, column=0, columnspan=3, sticky='w', padx=3, pady=2)
+        tb.Button(edit_frame, text="保存当前文件设置", command=self.save_current_file_config, bootstyle="secondary").grid(
+            row=2, column=5, sticky='e', padx=3, pady=2
+        )
 
         tb.Button(
             self.frame,
@@ -652,12 +654,20 @@ class WordExcelProcessorApp:
             "project": "项目名称",
             "address": "项目地址",
             "client": "保养客户名称",
-            "rows": "台数"
+            "rows": "台数",
+            "start": "开始日期",
+            "end": "结束日期",
+            "annual": "年价",
+            "subtotal": "小计",
+            "pay": "付款方式",
+            "inspect": "年检费"
         }
         for col, text in headings.items():
             self.preview.heading(col, text=text)
-            self.preview.column(col, width=140, anchor='center')
+            self.preview.column(col, width=120, anchor='center')
         self.preview.grid(row=12, column=0, columnspan=3, padx=10, pady=10, sticky='nsew')
+
+        self.preview.bind('<<TreeviewSelect>>', lambda e: self.populate_edit_from_selection())
 
         self.frame.grid_columnconfigure(1, weight=1)
         self.frame.grid_rowconfigure(12, weight=1)
@@ -699,6 +709,15 @@ class WordExcelProcessorApp:
                 project_addr = "读取失败"
                 client_name = "读取失败"
                 row_count = 0
+            if path not in self.file_configs:
+                self.file_configs[path] = {
+                    "start": "",
+                    "end": "",
+                    "pay": "季度付",
+                    "annual": "",
+                    "subtotal": "",
+                    "inspect": "不包含",
+                }
             excels.append({
                 "filename": fname,
                 "path": path,
@@ -712,10 +731,63 @@ class WordExcelProcessorApp:
     def refresh_preview(self):
         for row in self.preview.get_children():
             self.preview.delete(row)
+        self.preview_item_map.clear()
         for item in self.loaded_excels:
-            self.preview.insert('', 'end', values=(
-                item["filename"], item["project"], item["address"], item["client"], item["rows"]
+            cfg = self.file_configs.get(item["path"], {})
+            tree_id = self.preview.insert('', 'end', values=(
+                item["filename"],
+                item["project"],
+                item["address"],
+                item["client"],
+                item["rows"],
+                cfg.get("start", ""),
+                cfg.get("end", ""),
+                cfg.get("annual", ""),
+                cfg.get("subtotal", ""),
+                cfg.get("pay", ""),
+                cfg.get("inspect", ""),
             ))
+            self.preview_item_map[tree_id] = item["path"]
+
+    def populate_edit_from_selection(self):
+        selection = self.preview.selection()
+        if not selection:
+            return
+        item_id = selection[0]
+        path = self.preview_item_map.get(item_id)
+        if not path:
+            return
+        cfg = self.file_configs.get(path, {})
+        self.edit_start_date.set(cfg.get("start", ""))
+        self.edit_end_date.set(cfg.get("end", ""))
+        self.edit_pay_method.set(cfg.get("pay", "季度付"))
+        self.edit_annual_price.set(cfg.get("annual", ""))
+        self.edit_subtotal.set(cfg.get("subtotal", ""))
+        self.edit_annual_inspection.set(cfg.get("inspect", "不包含"))
+
+    def save_current_file_config(self):
+        selection = self.preview.selection()
+        if not selection:
+            messagebox.showwarning("提示", "请先在下方列表选择一个文件")
+            return
+        item_id = selection[0]
+        path = self.preview_item_map.get(item_id)
+        if not path:
+            return
+        self.file_configs[path] = {
+            "start": self.edit_start_date.get().strip(),
+            "end": self.edit_end_date.get().strip(),
+            "pay": self.edit_pay_method.get().strip() or "季度付",
+            "annual": self.edit_annual_price.get().strip(),
+            "subtotal": self.edit_subtotal.get().strip(),
+            "inspect": self.edit_annual_inspection.get().strip() or "不包含",
+        }
+        self.refresh_preview()
+        # 重新选中当前行方便连续编辑
+        for tid, p in self.preview_item_map.items():
+            if p == path:
+                self.preview.selection_set(tid)
+                break
 
     def update_contacts_by_station(self):
         station = self.station_choice_var.get()
@@ -731,6 +803,9 @@ class WordExcelProcessorApp:
             return
         if not self.template_folder.get() or not self.output_path.get():
             self.text.set("请先选择模板文件夹和输出目录")
+            return
+        if not self.file_configs:
+            self.text.set("请为至少一个文件保存金额/日期信息")
             return
         threading.Thread(target=self.batch_generate_contracts_thread).start()
 
@@ -758,18 +833,21 @@ class WordExcelProcessorApp:
     def generate_contract_for_single(self, excel_info):
         excel_path = excel_info["path"]
         self.update_contacts_by_station()
-        start_dt = self.parse_chinese_date(self.start_date_var.get().strip())
-        end_dt = self.parse_chinese_date(self.end_date_var.get().strip())
-        pay_method = self.pay_method_var.get().strip()
-        annual_price_str = self.annual_price_var.get().strip()
-        subtotal_str = self.subtotal_var.get().strip()
+        cfg = self.file_configs.get(excel_path, {})
+        start_dt = self.parse_chinese_date(cfg.get("start", ""))
+        end_dt = self.parse_chinese_date(cfg.get("end", ""))
+        pay_method = cfg.get("pay", "季度付")
+        annual_price_str = cfg.get("annual", "")
+        subtotal_str = cfg.get("subtotal", "")
         contact1 = self.contact1_var.get().strip()
         contact2 = self.contact2_var.get().strip()
         word_tpl = self.word_template_choice_var.get().strip()
-        annual_inspection = self.annual_inspection_var.get().strip()
+        annual_inspection = cfg.get("inspect", "不包含")
 
         if not start_dt or not end_dt:
-            raise ValueError("请填写有效的开始日期和结束日期（例：2025年3月30日）")
+            raise ValueError(f"{excel_info['filename']} 缺少有效的开始/结束日期（例：2025年3月30日）")
+        if not annual_price_str or not subtotal_str:
+            raise ValueError(f"{excel_info['filename']} 需填写年价和小计")
 
         service_months = 0
         if end_dt >= start_dt:
