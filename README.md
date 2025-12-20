@@ -4,6 +4,10 @@
 
 &emsp;&emsp;[GitHub项目地址](https://github.com/SiriYXR/AppWishList)
 
+## 桌面资质库管理工具（macOS/Windows）
+
+&emsp;&emsp;仓库 ``tools`` 目录下新增了基于 **PyQt5** 的跨平台电梯维保资质库管理器（``tools/bid_manager.py``）。它保留原有的文件管理、PDF 转图片、文字提取和人民币金额大写转换等能力，并额外支持保存资质库路径、窗口布局和字体缩放设置。运行 ``python tools/build_bid_manager.py`` 即可一键调用 PyInstaller 打包成 macOS 与 Windows 可执行程序（自动包含 ``data`` 目录），详见 ``tools/bid_manager_build.md``。
+
 ## 前言
 
 &emsp;&emsp;也许是为了促使用户立马买下中意的App，AppStore从`iOS 11`取消了愿望单系统，从此没有了类似`Steam`那样的应用关注和收藏功能。很多时候喜欢的应用打折也不能及时得知，或者是看到有意思的App过段时间想用时又想不起名字找不到了。

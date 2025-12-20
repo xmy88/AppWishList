@@ -1,0 +1,5 @@
+pyqt5
+pymupdf
+python-docx
+pyinstaller
+pyinstaller-hooks-contrib
