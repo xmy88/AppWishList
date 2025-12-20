@@ -81,6 +81,15 @@
 &emsp;&emsp;如果直接下载的文件夹到iPad中，可以先将项目文件夹移动到`Pythonista`在`iCloud`中的文件夹中，然后再到`Pythonista`中将该文件夹移动到`This iPad`来，不过如果你就在`iCloud`文件夹中使用倒是也行。</br>
 &emsp;&emsp;下载这个环节以后我会考虑写成一个像[安装stash](https://blog.siriyang.cn/posts/20191029224207id.html)那样的自动化安装脚本，今后只需要在控制台输入一行命令就可以自动下载安装了。
 
+### 桌面打包工具（PyQt6）
+
+&emsp;&emsp;项目根目录新增了`PackagerUI.py`，使用`PyQt6`提供跨平台的可视化界面来调用`PyInstaller`，可以在macOS或Windows上生成对应平台的安装包。
+
+- 请确保已经安装`PyQt6`与`PyInstaller`：`pip install pyqt6 pyinstaller`。
+- 运行`python PackagerUI.py`启动工具，依次选择入口脚本、输出目录、应用名称、图标与目标平台即可开始打包。
+- 选项包含单文件输出、是否隐藏控制台、清理旧构建等；macOS平台默认会尝试生成`universal2`架构。
+- 受限于`PyInstaller`，需要在目标平台上构建对应平台的程序（例如打包macOS应用请在macOS环境运行）。
+
 ### 收藏App
 &emsp;&emsp;首先将`AppWishList`文件夹下的`ExtAddApp.py`添加到`Share Extention Shortcuts`中，然后在浏览`App Store`的时候看见喜欢的应用时，点击分享按钮，然后选择`Run Pythonista Script`，在列表中选择运行之前添加的脚本就行了。
 
