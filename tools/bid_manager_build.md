@@ -6,41 +6,32 @@ can create native executables for both macOS and Windows with ``PyInstaller``.
 ## Prerequisites
 
 * Python 3.10+ with ``pip`` available.
-* ``PyQt5`` and optional text-extraction dependencies:
+* Install the toolchain with the curated requirements file:
   ```bash
-  pip install pyqt5 pymupdf python-docx
-  ```
-* ``PyInstaller`` installed globally or in a virtual environment:
-  ```bash
-  pip install pyinstaller
+  pip install -r tools/requirements_bid_manager.txt
   ```
 
 ## macOS build steps
 
 ```bash
-cd tools
-pyinstaller --noconfirm --windowed --name "BidManager" \
-  --add-data "../data:./data" \
-  bid_manager.py
+python tools/build_bid_manager.py
 ```
 
-* The ``--windowed`` flag hides the terminal.
-* ``--add-data`` can be extended if you keep company templates or icons in the
-  repo; remove it if unused.
+* The helper script normalizes ``--add-data`` separators for you and includes
+  the repository ``data`` directory by default if it exists.
+* Use ``--onefile`` to produce a single-file bundle (slower startup) or
+  ``--icon`` to apply a custom ``.icns`` icon.
 * The final ``BidManager.app`` lives in ``dist``.
 
 ## Windows build steps
 
 ```powershell
-cd tools
-pyinstaller --noconfirm --windowed --name "BidManager" `
-  --add-data "..\\data;data" `
-  bid_manager.py
+python tools\build_bid_manager.py
 ```
 
 Notes:
 
-* Replace the ``--add-data`` path separator with ``;`` on Windows.
+* The script auto-selects ``;`` as the data separator for Windows.
 * The executable is created under ``dist\BidManager\BidManager.exe``.
 
 ## Common tips
